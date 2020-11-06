@@ -32,3 +32,34 @@ MGCUTE_DB_NAME=mytestdb
 MGCUTE_DB_USERNAME=
 MGCUTE_DB_PASSWORD=
 ```
+
+### Filter query
+
+For filtering your query you can use several methods such as `where`, `whereNot`, `orWhere`, `...`.
+
+```php
+<?php
+
+use MongoCute\MongoCute\QueryBuilder;
+
+$cards = QueryBuilder::query()
+    ->table( 'cards' )
+    ->whereEqual( 'name', 'foo' )
+    ->whereNot( 'size', 'large' )
+    ->get();
+
+// use $cards for your needs
+```
+
+### Filter Methods
+
+Name | Description
+--- | ---
+`whereEqual( string $name, $value )` | Matches values that are equal to a specified value.
+`whereNot( string $name, $value )` | Matches all values that are not equal to a specified value.
+`whereIn( string $name, array $values )` | Matches any of the values specified in an array.
+`whereNotIn( string $name, array $value )` | Matches none of the values specified in an array.
+`whereGreaterThan( string $name, $value )` | Matches values that are greater than a specified value.
+`whereGreaterThanOrEqual( string $name, $value )` | Matches values that are greater than or equal to a specified value.
+`whereLessThan( string $name, $value )` | Matches values that are less than a specified value.
+`whereLessThanOrEqual( string $name, $value )` | Matches values that are less than or equal to a specified value.

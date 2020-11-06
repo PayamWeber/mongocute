@@ -262,34 +262,6 @@ class QueryBuilder
 	}
 
 	/**
-	 * @param $id
-	 *
-	 * @return Model|bool
-	 */
-	public static function find( $id = null )
-	{
-		if ( $id === false || $id === 0 || $id === '' )
-			return false;
-
-		if ( $id === null )
-			global $post;
-
-		$self              = new static();
-		$self->post_object = $id ? ( is_object( $id ) ? $id : get_post( $id ) ) : ( $post ?? false );
-
-		if ( ! $self->post_object )
-			return false;
-
-		if ( $self->post_object->post_type != $self->post_type )
-			return false;
-
-		if ( $self->post_type == 'product' && $self->post_object && function_exists( "wc_get_product" ) )
-			$self->post_object = wc_get_product( $self->post_object );
-
-		return $self;
-	}
-
-	/**
 	 * @param        $key
 	 * @param string $operator_or_value
 	 * @param string $value
