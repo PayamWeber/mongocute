@@ -38,6 +38,7 @@ use MongoDB\UpdateResult;
  * @method array get( int $count = 0 ) get result
  * @method array|object|null first() get first result only
  * @method \MongoDB\InsertOneResult create( array $data ) Insert an Doc into table
+ * @method \MongoDB\InsertManyResult createMany( array $data ) Insert Docs into table
  * @method \MongoDB\UpdateResult update( array $data ) Update Docs
  * @method \MongoDB\DeleteResult delete() Delete Docs
  * @package MongoCute\MongoCute
@@ -227,6 +228,9 @@ class QueryBuilder
 				break;
 			case 'create':
 				return $this->_insert( $args[ 'arg1' ] );
+				break;
+			case 'createmany':
+				return $this->_insert( $args[ 'arg1' ], true );
 				break;
 			case 'update':
 				return $this->_update( $args[ 'arg1' ] );
@@ -452,15 +456,17 @@ class QueryBuilder
 
 	/**
 	 * @param array $data
+	 * @param bool  $multiple
 	 *
-	 * @return \MongoDB\InsertOneResult
+	 * @return mixed
 	 * @throws MongoCuteException
 	 */
-	protected function _insert( array $data ): InsertOneResult
+	protected function _insert( array $data, $multiple = false )
 	{
 		$this->initializeDatabaseAndCollection();
 
-		return $this->mongo->insertOne( $data );
+		$call = $multiple ? 'insertMany' : 'insertOne';
+		return $this->mongo->$call( $data );
 	}
 
 	/**

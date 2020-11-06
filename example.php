@@ -14,4 +14,9 @@ $query = QueryBuilder::query()
 	->orderby( [ 'name' ], 'asc' )
 	->get();
 
+QueryBuilder::query()->table( 'books' )->createMany( [
+	[ 'name' => 'mohsen', 'lastname' => 'namjoo' ],
+	[ 'name' => 'mohsen2', 'lastname' => 'namjoo2' ],
+] );
+
 var_dump( $query );
