@@ -46,7 +46,7 @@ $cards = QueryBuilder::query()
     ->table( 'cards' )
     ->whereEqual( 'name', 'foo' )
     ->whereGreaterThan( 'count', 10 )
-    ->get();
+    ->get(); // limit documents count by giving a number to "get". Example: get(10);
 
 // use $cards for your needs
 ```
@@ -63,6 +63,26 @@ Name | Description
 `whereGreaterThanOrEqual( string $name, $value )` | Matches values that are greater than or equal to a specified value.
 `whereLessThan( string $name, $value )` | Matches values that are less than a specified value.
 `whereLessThanOrEqual( string $name, $value )` | Matches values that are less than or equal to a specified value.
+
+### Group Filter
+
+You can set your filters as a group by just adding a closure to "where" method.
+
+```php
+<?php
+
+use MongoCute\MongoCute\QueryBuilder;
+
+$cards = QueryBuilder::query()
+    ->table( 'cards' )
+    ->where( function( QueryBuilder $builder ){
+        $builder->whereIn( 'name', [ 'foo', 'bar' ] );
+        $builder->orWhereIn( 'name', [ 'foo2', 'bar2' ] );
+    } )
+    ->get();
+
+// use $cards for your needs
+```
 
 ### OrderBy
 
@@ -142,4 +162,36 @@ $update = QueryBuilder::query()
     ->table( 'cards' )
     ->whereEqual( 'name', 'foo' ) // your filters come here before delete
     ->delete();
+```
+
+### Select database at runtime
+
+You can select your database at the query by calling "db" method.
+
+```php
+<?php
+
+use MongoCute\MongoCute\QueryBuilder;
+
+$cards = QueryBuilder::query()
+    ->db( 'mytestdb' )
+    ->table( 'cards' )
+    ->whereEqual( 'name', 'foo' ) // your filters come here before delete
+    ->get();
+```
+
+### Get first result
+
+By calling method "first" at the last of your query, you can retrieve the first document taken.
+
+```php
+<?php
+
+use MongoCute\MongoCute\QueryBuilder;
+
+$card = QueryBuilder::query()
+    ->db( 'mytestdb' )
+    ->table( 'cards' )
+    ->whereEqual( 'name', 'foo' ) // your filters come here before "first"
+    ->first(); // retrieves the first document based on filters
 ```
