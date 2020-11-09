@@ -13,26 +13,30 @@ use MongoDB\UpdateResult;
 /**
  * Class QueryBuilder
  *
- * @method QueryBuilder db( $name ) Select database
- * @method QueryBuilder table( $name ) Select Collection/Table
- * @method QueryBuilder where( string $name, $value = '', string $operator = '$eq' ) Where equals to value
- * @method QueryBuilder whereEqual( string $name, $value ) Where equals to value
- * @method QueryBuilder whereNot( string $name, $value ) Where not equals to value
- * @method QueryBuilder whereIn( string $name, array $values ) Where equals to value
- * @method QueryBuilder whereNotIn( string $name, array $values ) Where equals to value
- * @method QueryBuilder whereGreaterThan( string $name, $value ) Where equals to value
- * @method QueryBuilder whereGreaterThanOrEqual( string $name, $value ) Where equals to value
- * @method QueryBuilder whereLessThan( string $name, $value ) Where equals to value
- * @method QueryBuilder whereLessThanOrEqual( string $name, $value ) Where equals to value
- * @method QueryBuilder orWhere( string $name, $value = '', string $operator = '$eq' ) Where equals to value
- * @method QueryBuilder orWhereEqual( string $name, $value ) Where equals to value
- * @method QueryBuilder orWhereNot( string $name, $value ) Where not equals to value
- * @method QueryBuilder orWhereIn( string $name, array $values ) Where equals to value
- * @method QueryBuilder orWhereNotIn( string $name, array $values ) Where equals to value
- * @method QueryBuilder orWhereGreaterThan( string $name, $value ) Where equals to value
- * @method QueryBuilder orWhereGreaterThanOrEqual( string $name, $value ) Where equals to value
- * @method QueryBuilder orWhereLessThan( string $name, $value ) Where equals to value
- * @method QueryBuilder orWhereLessThanOrEqual( string $name, $value ) Where equals to value
+ * @method QueryBuilder db( $name )
+ * @method QueryBuilder table( $name )
+ * @method QueryBuilder where( string $name, $value = '', string $operator = '$eq' )
+ * @method QueryBuilder whereEqual( string $name, $value )
+ * @method QueryBuilder whereNot( string $name, $value )
+ * @method QueryBuilder whereIn( string $name, array $values )
+ * @method QueryBuilder whereNotIn( string $name, array $values )
+ * @method QueryBuilder whereGreaterThan( string $name, $value )
+ * @method QueryBuilder whereGreaterThanOrEqual( string $name, $value )
+ * @method QueryBuilder whereLessThan( string $name, $value )
+ * @method QueryBuilder whereLessThanOrEqual( string $name, $value )
+ * @method QueryBuilder whereExists( string $name, $value )
+ * @method QueryBuilder whereType( string $name, $value )
+ * @method QueryBuilder orWhere( string $name, $value = '', string $operator = '$eq' )
+ * @method QueryBuilder orWhereEqual( string $name, $value )
+ * @method QueryBuilder orWhereNot( string $name, $value )
+ * @method QueryBuilder orWhereIn( string $name, array $values )
+ * @method QueryBuilder orWhereNotIn( string $name, array $values )
+ * @method QueryBuilder orWhereGreaterThan( string $name, $value )
+ * @method QueryBuilder orWhereGreaterThanOrEqual( string $name, $value )
+ * @method QueryBuilder orWhereLessThan( string $name, $value )
+ * @method QueryBuilder orWhereLessThanOrEqual( string $name, $value )
+ * @method QueryBuilder orWhereExists( string $name, $value )
+ * @method QueryBuilder orWhereType( string $name, $value )
  * @method QueryBuilder select( array $fields ) select fields from collection
  * @method QueryBuilder orderby( array $fields, $order = 'ASC' ) order fields from collection
  * @method array get( int $count = 0 ) get result
@@ -42,6 +46,8 @@ use MongoDB\UpdateResult;
  * @method \MongoDB\UpdateResult update( array $data ) Update Docs
  * @method \MongoDB\DeleteResult delete() Delete Docs
  * @package MongoCute\MongoCute
+ * @author  Payam Jafari/payamjafari.ir
+ * @see     http://payamweber.github.io/mongocute
  */
 class QueryBuilder
 {
@@ -103,9 +109,9 @@ class QueryBuilder
 	protected $mongo;
 
 	/**
-	 * this is allowed operators for where mysql
+	 * this is allowed operators for queries
 	 */
-	protected const ALLOWED_OPERATORS = [ '$eq', '$ne', '$gt', '$gte', '$lt', '$lte', '$in', '$nin' ];
+	protected const ALLOWED_OPERATORS = [ '$eq', '$ne', '$gt', '$gte', '$lt', '$lte', '$in', '$nin', '$exists', '$type' ];
 
 	/**
 	 * Model constructor.
@@ -122,7 +128,7 @@ class QueryBuilder
 		$this->db_user    = self::getEnv( 'MGCUTE_DB_USERNAME', '' );
 		$this->db_pass    = self::getEnv( 'MGCUTE_DB_PASSWORD', '' );
 
-		$userpass = $this->db_user ? "{$this->db_user}:{$this->db_pass}@" : '';
+		$userpass    = $this->db_user ? "{$this->db_user}:{$this->db_pass}@" : '';
 		$this->mongo = new Client( "mongodb://{$userpass}{$this->db_address}:{$this->db_port}" );
 
 		try {
@@ -159,66 +165,45 @@ class QueryBuilder
 		$args[ 'arg3' ] = $args[ 'join_operator' ] = $args[ 2 ] ?? '';
 		$args[ 'arg4' ] = $args[ 3 ] ?? '';
 
-		switch ( strtolower( $name ) ) {
+		switch ( $name = strtolower( $name ) ) {
 			case 'db':
 				return $this->_selectdb( $args[ 'arg1' ] );
 				break;
 			case 'table':
 				return $this->_table( $args[ 'arg1' ] );
 				break;
-			case 'where':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], $args[ 'arg3' ] );
+			case $name == 'orwhere' ? 'orwhere' : 'where':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], $args[ 'arg3' ], $name == 'orwhere' ? '$or' : '$and' );
 				break;
-			case 'whereequal':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$eq' );
+			case $name == 'orwhereequal' ? 'orwhereequal' : 'whereequal':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$eq', $name == 'orwhereequal' ? '$or' : '$and' );
 				break;
-			case 'wherenot':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$ne' );
+			case $name == 'orwherenot' ? 'orwherenot' : 'wherenot':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$ne', $name == 'orwherenot' ? '$or' : '$and' );
 				break;
-			case 'wheregreaterthan':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$gt' );
+			case $name == 'orwheregreaterthan' ? 'orwheregreaterthan' : 'wheregreaterthan':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$gt', $name == 'orwheregreaterthan' ? '$or' : '$and' );
 				break;
-			case 'wheregreaterthanorequal':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$gte' );
+			case $name == 'orwheregreaterthanorequal' ? 'orwheregreaterthanorequal' : 'wheregreaterthanorequal':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$gte', $name == 'orwheregreaterthanorequal' ? '$or' : '$and' );
 				break;
-			case 'wherelessthan':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$lt' );
+			case $name == 'orwherelessthan' ? 'orwherelessthan' : 'wherelessthan':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$lt', $name == 'orwherelessthan' ? '$or' : '$and' );
 				break;
-			case 'wherelessthanorequal':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$lte' );
+			case $name == 'orwherelessthanorequal' ? 'orwherelessthanorequal' : 'wherelessthanorequal':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$lte', $name == 'orwherelessthanorequal' ? '$or' : '$and' );
 				break;
-			case 'wherein':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$in' );
+			case $name == 'orwherein' ? 'orwherein' : 'wherein':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$in', $name == 'orwherein' ? '$or' : '$and' );
 				break;
-			case 'wherenotin':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$nin' );
+			case $name == 'orwherenotin' ? 'orwherenotin' : 'wherenotin':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$nin', $name == 'orwherenotin' ? '$or' : '$and' );
 				break;
-			case 'orwhereequal':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$eq', '$or' );
+			case $name == 'orwhereexists' ? 'orwhereexists' : 'whereexists':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$exists', $name == 'orwhereexists' ? '$or' : '$and' );
 				break;
-			case 'orwherenot':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$ne', '$or' );
-				break;
-			case 'orwheregreaterthan':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$gt', '$or' );
-				break;
-			case 'orwheregreaterthanorequal':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$gte', '$or' );
-				break;
-			case 'orwherelessthan':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$lt', '$or' );
-				break;
-			case 'orwherelessthanorequal':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$lte', '$or' );
-				break;
-			case 'orwherein':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$in', '$or' );
-				break;
-			case 'orwherenotin':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$nin', '$or' );
-				break;
-			case 'orwhere':
-				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], $args[ 'arg3' ], '$or' );
+			case $name == 'orwheretype' ? 'orwheretype' : 'wheretype':
+				return $this->_where( $args[ 'arg1' ], $args[ 'arg2' ], '$type', $name == 'orwheretype' ? '$or' : '$and' );
 				break;
 			case 'select':
 				return $this->_select( $args[ 'arg1' ] ? : [] );
@@ -421,8 +406,6 @@ class QueryBuilder
 
 		$method = $first ? 'findOne' : 'find';
 
-		print_r( $this->query_where );
-
 		$result = $this->mongo->$method( $this->query_where, [
 			'limit' => intval( $count ),
 			'projection' => $this->query_select,
@@ -511,7 +494,7 @@ class QueryBuilder
 	 */
 	protected function initializeDatabaseAndCollection()
 	{
-		if ( ! $this->connected ){
+		if ( ! $this->connected ) {
 			throw new MongoCuteException( 'Could not connect to database' );
 		}
 

@@ -6,9 +6,10 @@ require './vendor/autoload.php';
 
 $query = QueryBuilder::query()
 	->table( 'books' )
-	->whereEqual( 'lastname', 'jafari' )
+	->whereEqual( 'lastname', 'namjoo' )
+	->whereType( 'lastname', 'string' )
 	->Where( function ( QueryBuilder $query ) {
-		$query->where( 'name', 'payam' );
+		$query->where( 'name', 'mohsen' );
 	} )
 	->select( [ 'name' ] )
 	->orderby( [ 'name' ], 'asc' )
