@@ -63,6 +63,10 @@ Name | Description
 `whereGreaterThanOrEqual( string $name, $value )` | Matches values that are greater than or equal to a specified value.
 `whereLessThan( string $name, $value )` | Matches values that are less than a specified value.
 `whereLessThanOrEqual( string $name, $value )` | Matches values that are less than or equal to a specified value.
+`whereExists( string $name, $value )` | Matches documents that have the specified field.
+`whereType( string $name, $value )` | Selects documents if a field is of the specified type.
+
+####Note: All of these can be used with prefix `'or'` and also can be called statically from class.
 
 ### Group Filter
 
