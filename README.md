@@ -66,7 +66,7 @@ Name | Description
 `whereExists( string $name, $value )` | Matches documents that have the specified field.
 `whereType( string $name, $value )` | Selects documents if a field is of the specified type.
 
-####Note: All of these can be used with prefix `'or'` and also can be called statically from class.
+#### Note: All of these can be used with prefix `'or'` and also can be called statically from class.
 
 ### Group Filter
 
